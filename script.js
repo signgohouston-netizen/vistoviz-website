@@ -113,7 +113,7 @@
         addBubble(msg, 'me');
         chatInput.value = '';
         setTimeout(function () {
-          addBubble("Thanks for reaching out! 🙌 A VistoViz specialist will reply shortly. For anything urgent, call us at <b>+1 (281) 889-3840</b> or email <b>order@vistoviz.com</b>.", 'bot');
+          addBubble("Thanks for reaching out! 🙌 A VistoViz specialist will reply shortly. For anything urgent, call us at <b>+1 (281) 889-3940</b> or email <b>order@vistoviz.com</b>.", 'bot');
         }, 600);
       });
     }
