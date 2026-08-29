@@ -40,17 +40,52 @@
     revealEls.forEach(function (el) { el.classList.add('in'); });
   }
 
-  // Contact form (front-end only)
+  // Contact form → posts leads to the MongoDB-backed /api/lead endpoint
   var form = document.getElementById('quoteForm');
   if (form) {
     var success = document.getElementById('formSuccess');
+    var val = function (id) { var el = form.querySelector('#' + id); return el ? el.value : ''; };
+    var showMsg = function (text, ok) {
+      if (!success) return;
+      success.textContent = text;
+      success.style.background = ok ? '' : '#fef2f2';
+      success.style.borderColor = ok ? '' : '#fecaca';
+      success.style.color = ok ? '' : '#b91c1c';
+      success.classList.add('show');
+    };
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       if (!form.checkValidity()) { form.reportValidity(); return; }
-      if (success) success.classList.add('show');
       var btn = form.querySelector('button[type=submit]');
-      if (btn) btn.textContent = 'Sent ✓';
-      setTimeout(function () { form.reset(); }, 400);
+      var label = btn ? btn.textContent : '';
+      if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+
+      fetch('/api/lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: val('name'),
+          email: val('email'),
+          phone: val('phone'),
+          message: val('message'),
+          company_website: val('company_website')
+        })
+      })
+        .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+        .then(function (res) {
+          if (res.ok && res.d && res.d.ok) {
+            showMsg("✅ Thanks — we'll be in touch within 24 hours!", true);
+            if (btn) btn.textContent = 'Sent ✓';
+            setTimeout(function () { form.reset(); if (btn) { btn.disabled = false; btn.textContent = label; } }, 1200);
+          } else {
+            showMsg((res.d && res.d.error) || "⚠️ Something went wrong. Please email order@vistoviz.com or call (281) 889-3940.", false);
+            if (btn) { btn.disabled = false; btn.textContent = label; }
+          }
+        })
+        .catch(function () {
+          showMsg("⚠️ Couldn't send right now. Please email order@vistoviz.com or call (281) 889-3940.", false);
+          if (btn) { btn.disabled = false; btn.textContent = label; }
+        });
     });
   }
 

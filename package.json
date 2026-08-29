@@ -1,0 +1,9 @@
+{
+  "name": "vistoviz-website",
+  "version": "1.0.0",
+  "private": true,
+  "description": "VistoViz agency website with a serverless lead-capture API backed by MongoDB.",
+  "dependencies": {
+    "mongodb": "^6.12.0"
+  }
+}
