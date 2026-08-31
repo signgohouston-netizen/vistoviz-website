@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>VistoViz Admin — Leads</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root{ --navy:#0c1524; --navy2:#111f38; --orange:#ff8a1e; --gold:#f5a623; --ink:#1a2338; --muted:#667191; --border:#e6ebf4; --light:#f5f7fb; }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{ font-family:'Inter',system-ui,sans-serif; color:var(--ink); background:var(--light); line-height:1.6; -webkit-font-smoothing:antialiased; }
+  a{ color:var(--orange); text-decoration:none; }
+  .bar{ background:linear-gradient(135deg,var(--navy),var(--navy2)); color:#fff; padding:16px 22px; display:flex; align-items:center; justify-content:space-between; }
+  .brand{ font-family:'Poppins',sans-serif; font-weight:800; font-size:20px; }
+  .brand .o{ color:var(--orange); }
+  .bar .sub{ font-size:13px; color:#aab4cc; }
+  .wrap{ max-width:1000px; margin:0 auto; padding:26px 18px 60px; }
+  .btn{ font-family:'Poppins',sans-serif; font-weight:600; font-size:14px; border:0; cursor:pointer; border-radius:999px; padding:11px 20px; background:linear-gradient(135deg,var(--orange),var(--gold)); color:#fff; transition:transform .2s; }
+  .btn:hover{ transform:translateY(-2px); }
+  .btn.ghost{ background:#fff; color:var(--navy); border:1px solid var(--border); }
+  /* login */
+  .login{ max-width:400px; margin:8vh auto 0; background:#fff; border:1px solid var(--border); border-radius:20px; padding:34px 30px; box-shadow:0 20px 50px rgba(12,21,36,.10); text-align:center; }
+  .login h1{ font-family:'Poppins',sans-serif; font-size:22px; margin-bottom:6px; }
+  .login p{ color:var(--muted); font-size:14px; margin-bottom:20px; }
+  .login input{ width:100%; padding:13px 15px; border:1.5px solid var(--border); border-radius:12px; font-size:15px; font-family:inherit; margin-bottom:14px; }
+  .login input:focus{ outline:none; border-color:var(--orange); }
+  .login .btn{ width:100%; }
+  .err{ color:#b91c1c; font-size:13.5px; margin-top:12px; min-height:18px; }
+  /* leads */
+  .toolbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+  .toolbar h1{ font-family:'Poppins',sans-serif; font-size:22px; }
+  .toolbar .actions{ display:flex; gap:10px; }
+  .empty{ text-align:center; color:var(--muted); padding:50px 0; }
+  .lead{ background:#fff; border:1px solid var(--border); border-radius:16px; padding:20px 22px; margin-bottom:14px; box-shadow:0 6px 18px rgba(12,21,36,.05); }
+  .lead .top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .lead .name{ font-family:'Poppins',sans-serif; font-weight:700; font-size:17px; }
+  .lead .date{ color:var(--muted); font-size:13px; white-space:nowrap; }
+  .lead .meta{ display:flex; flex-wrap:wrap; gap:8px 18px; margin:8px 0 12px; font-size:14px; }
+  .lead .meta span{ color:var(--muted); }
+  .lead .msg{ background:var(--light); border-radius:12px; padding:12px 14px; font-size:14.5px; white-space:pre-wrap; }
+  .lead .tag{ display:inline-block; background:#fff3e6; color:#b45309; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; padding:3px 9px; border-radius:999px; }
+  .hide{ display:none !important; }
+</style>
+</head>
+<body>
+  <div class="bar">
+    <div class="brand">Visto<span class="o">Viz</span> <span class="sub">· Leads Admin</span></div>
+    <button class="btn ghost hide" id="logoutBtn">Log out</button>
+  </div>
+
+  <div class="wrap">
+    <!-- Login -->
+    <div class="login" id="loginView">
+      <h1>Admin Login</h1>
+      <p>Enter your admin password to view website leads.</p>
+      <input type="password" id="adminKey" placeholder="Admin password" autocomplete="current-password" />
+      <button class="btn" id="loginBtn">View Leads →</button>
+      <div class="err" id="loginErr"></div>
+    </div>
+
+    <!-- Leads -->
+    <div class="hide" id="leadsView">
+      <div class="toolbar">
+        <h1>Leads <span id="count" style="color:var(--orange)"></span></h1>
+        <div class="actions">
+          <button class="btn ghost" id="refreshBtn">↻ Refresh</button>
+        </div>
+      </div>
+      <div id="leadsList"></div>
+    </div>
+  </div>
+
+  <script>
+    var STORE = 'vistoviz_admin_key';
+    var $ = function (id) { return document.getElementById(id); };
+    var loginView = $('loginView'), leadsView = $('leadsView'), logoutBtn = $('logoutBtn');
+
+    function getKey() { try { return sessionStorage.getItem(STORE) || ''; } catch (e) { return window.__k || ''; } }
+    function setKey(k) { try { sessionStorage.setItem(STORE, k); } catch (e) { window.__k = k; } }
+    function clearKey() { try { sessionStorage.removeItem(STORE); } catch (e) {} window.__k = ''; }
+
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+    function fmtDate(d) {
+      if (!d) return '';
+      var dt = new Date(d);
+      if (isNaN(dt)) return '';
+      return dt.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+    }
+
+    function showLogin(msg) {
+      loginView.classList.remove('hide');
+      leadsView.classList.add('hide');
+      logoutBtn.classList.add('hide');
+      $('loginErr').textContent = msg || '';
+    }
+    function showLeads() {
+      loginView.classList.add('hide');
+      leadsView.classList.remove('hide');
+      logoutBtn.classList.remove('hide');
+    }
+
+    function render(leads) {
+      $('count').textContent = '(' + leads.length + ')';
+      var list = $('leadsList');
+      if (!leads.length) { list.innerHTML = '<div class="empty">No leads yet — submissions from your contact form will appear here.</div>'; return; }
+      list.innerHTML = leads.map(function (l) {
+        var phone = l.phone ? '<span>📞 <a href="tel:' + esc(l.phone) + '">' + esc(l.phone) + '</a></span>' : '';
+        return '<div class="lead">' +
+          '<div class="top"><div class="name">' + esc(l.name) + ' <span class="tag">' + esc(l.status || 'new') + '</span></div>' +
+          '<div class="date">' + esc(fmtDate(l.createdAt)) + '</div></div>' +
+          '<div class="meta"><span>✉️ <a href="mailto:' + esc(l.email) + '">' + esc(l.email) + '</a></span>' + phone + '</div>' +
+          '<div class="msg">' + esc(l.message) + '</div>' +
+          '<div style="margin-top:12px"><a class="btn" style="display:inline-block" href="mailto:' + esc(l.email) + '?subject=Re%3A%20Your%20VistoViz%20inquiry">Reply by email</a></div>' +
+          '</div>';
+      }).join('');
+    }
+
+    function load(key) {
+      return fetch('/api/leads', { headers: { 'x-admin-key': key } }).then(function (r) {
+        if (r.status === 401) { var e = new Error('unauth'); e.code = 401; throw e; }
+        if (!r.ok) throw new Error('server');
+        return r.json();
+      });
+    }
+
+    function doLogin(key) {
+      $('loginErr').textContent = 'Checking…';
+      load(key).then(function (data) {
+        setKey(key);
+        showLeads();
+        render(data.leads || []);
+      }).catch(function (e) {
+        if (e.code === 401) showLogin('Wrong password. Please try again.');
+        else showLogin('Could not load leads. Check that the database is connected, then retry.');
+      });
+    }
+
+    $('loginBtn').addEventListener('click', function () {
+      var k = $('adminKey').value.trim();
+      if (!k) { $('loginErr').textContent = 'Please enter your admin password.'; return; }
+      doLogin(k);
+    });
+    $('adminKey').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('loginBtn').click(); });
+    $('refreshBtn').addEventListener('click', function () {
+      load(getKey()).then(function (d) { render(d.leads || []); }).catch(function () { showLogin('Session expired — please log in again.'); });
+    });
+    logoutBtn.addEventListener('click', function () { clearKey(); $('adminKey').value = ''; showLogin(''); });
+
+    // Auto-login if a key is remembered this session
+    (function () {
+      var k = getKey();
+      if (k) doLogin(k); else showLogin('');
+    })();
+  </script>
+</body>
+</html>
