@@ -72,6 +72,6 @@ module.exports = async function handler(req, res) {
     res.status(200).json({ ok: true, message: "Thanks! We'll be in touch within 24 hours." });
   } catch (err) {
     console.error("[lead] error:", err && err.message);
-    res.status(500).json({ ok: false, error: "Server error. Please email order@vistoviz.com." });
+    res.status(500).json({ ok: false, error: "Server error. Please email vistoviz369@gmail.com." });
   }
 };

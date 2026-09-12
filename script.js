@@ -78,12 +78,12 @@
             if (btn) btn.textContent = 'Sent ✓';
             setTimeout(function () { form.reset(); if (btn) { btn.disabled = false; btn.textContent = label; } }, 1200);
           } else {
-            showMsg((res.d && res.d.error) || "⚠️ Something went wrong. Please email order@vistoviz.com or call (281) 889-3940.", false);
+            showMsg((res.d && res.d.error) || "⚠️ Something went wrong. Please email vistoviz369@gmail.com or call (281) 889-3940.", false);
             if (btn) { btn.disabled = false; btn.textContent = label; }
           }
         })
         .catch(function () {
-          showMsg("⚠️ Couldn't send right now. Please email order@vistoviz.com or call (281) 889-3940.", false);
+          showMsg("⚠️ Couldn't send right now. Please email vistoviz369@gmail.com or call (281) 889-3940.", false);
           if (btn) { btn.disabled = false; btn.textContent = label; }
         });
     });
@@ -148,7 +148,7 @@
         addBubble(msg, 'me');
         chatInput.value = '';
         setTimeout(function () {
-          addBubble("Thanks for reaching out! 🙌 A VistoViz specialist will reply shortly. For anything urgent, call us at <b>+1 (281) 889-3940</b> or email <b>order@vistoviz.com</b>.", 'bot');
+          addBubble("Thanks for reaching out! 🙌 A VistoViz specialist will reply shortly. For anything urgent, call us at <b>+1 (281) 889-3940</b> or email <b>vistoviz369@gmail.com</b>.", 'bot');
         }, 600);
       });
     }
