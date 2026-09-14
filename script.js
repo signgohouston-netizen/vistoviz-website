@@ -106,6 +106,21 @@
     });
   });
 
+  // Billing toggle (Hosting & Care page)
+  var billing = document.getElementById('careBilling');
+  if (billing) {
+    var carePlans = document.getElementById('carePlans');
+    var billingBtns = billing.querySelectorAll('button');
+    billing.addEventListener('click', function (e) {
+      var b = e.target.closest('button');
+      if (!b) return;
+      billingBtns.forEach(function (x) { x.classList.remove('active'); x.setAttribute('aria-pressed', 'false'); });
+      b.classList.add('active');
+      b.setAttribute('aria-pressed', 'true');
+      if (carePlans) carePlans.classList.toggle('annual', b.getAttribute('data-billing') === 'annual');
+    });
+  }
+
   // Live chat widget
   var chatFab = document.getElementById('chatFab');
   var chatPanel = document.getElementById('chatPanel');
