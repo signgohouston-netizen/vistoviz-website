@@ -165,6 +165,19 @@
     var domainInput = document.getElementById('domainInput');
     var TLD_PRICE = { com: '19.99', net: '22.99', org: '19.99', co: '32.99', io: '54.99', us: '14.99', biz: '21.99', info: '24.99', online: '12.99', store: '9.99', shop: '12.99', tech: '9.99', dev: '17.99', ai: '99.99' };
     var ALT_TLDS = ['com', 'net', 'org', 'co', 'io', 'online'];
+    // ── Instant checkout ──────────────────────────────────────────────
+    // Paste your ResellerClub storefront URL here to turn ON "Buy Now" so a
+    // visitor checks out & the domain books in real time. Use {domain} where
+    // the searched name goes, e.g.
+    //   'https://www.YOURSTOREFRONT.com/domain-name-search-results?domain-name={domain}'
+    // Leave it '' and the button routes visitors to the request/contact flow.
+    var RESELLER_STOREFRONT = '';
+    var buyUrl = function (name) {
+      if (!RESELLER_STOREFRONT) return null;
+      return RESELLER_STOREFRONT.indexOf('{domain}') > -1
+        ? RESELLER_STOREFRONT.replace('{domain}', encodeURIComponent(name))
+        : RESELLER_STOREFRONT;
+    };
     var esc = function (s) { return String(s).replace(/[<>"'&]/g, function (c) { return { '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '&': '&amp;' }[c]; }); };
 
     var cleanDomain = function (raw) {
@@ -190,12 +203,17 @@
 
     var showAvailable = function (name) {
       var price = TLD_PRICE[name.split('.').pop()];
+      var bu = buyUrl(name);
+      var cta = bu
+        ? '<a class="btn btn-primary" href="' + bu + '" target="_blank" rel="noopener">Buy Now — Secure Checkout &rarr;</a>' +
+          '<a class="reg-alt" href="contact.html?domain=' + encodeURIComponent(name) + '">or have us set it up for you</a>'
+        : regCta(name, 'Register this domain');
       render(
         '<div class="dn">' + esc(name) + '</div>' +
         '<div class="verdict ok">✅ Great news — this domain is available!</div>' +
         (price ? '<p class="pr">Register it through VistoViz for <b>$' + price + '/year</b> — we set it up for you.</p>'
                : '<p class="pr">We can register this domain for you and handle the full setup.</p>') +
-        regCta(name, 'Register this domain') + fine, 'ok');
+        cta + fine, 'ok');
     };
 
     var showTaken = function (name) {
