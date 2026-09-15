@@ -171,7 +171,7 @@
     // the searched name goes, e.g.
     //   'https://www.YOURSTOREFRONT.com/domain-name-search-results?domain-name={domain}'
     // Leave it '' and the button routes visitors to the request/contact flow.
-    var RESELLER_STOREFRONT = '';
+    var RESELLER_STOREFRONT = 'https://jamal1340596.supersite2.myorderbox.com/domain-registration/index.php?action=check_availability&txtDomainName={domain}';
     var buyUrl = function (name) {
       if (!RESELLER_STOREFRONT) return null;
       return RESELLER_STOREFRONT.indexOf('{domain}') > -1
@@ -202,18 +202,24 @@
     var fine = '<p class="fine">Availability is checked live via DNS. Final confirmation and exact price are verified at registration.</p>';
 
     var showAvailable = function (name) {
-      var price = TLD_PRICE[name.split('.').pop()];
       var bu = buyUrl(name);
-      var cta = bu
-        ? '<a class="btn btn-primary" href="' + bu + '" target="_blank" rel="noopener">Buy Now — Secure Checkout &rarr;</a>' +
-          '<a class="reg-alt" href="contact.html?domain=' + encodeURIComponent(name) + '">or have us set it up for you</a>'
-        : regCta(name, 'Register this domain');
-      render(
-        '<div class="dn">' + esc(name) + '</div>' +
-        '<div class="verdict ok">✅ Great news — this domain is available!</div>' +
-        (price ? '<p class="pr">Register it through VistoViz for <b>$' + price + '/year</b> — we set it up for you.</p>'
-               : '<p class="pr">We can register this domain for you and handle the full setup.</p>') +
-        cta + fine, 'ok');
+      if (bu) {
+        render(
+          '<div class="dn">' + esc(name) + '</div>' +
+          '<div class="verdict ok">✅ Great news — this domain is available!</div>' +
+          '<p class="pr">Grab it before someone else does — secure checkout, and we set it up for you.</p>' +
+          '<a class="btn btn-primary" href="' + bu + '" target="_blank" rel="noopener">Buy Now — Secure Checkout &rarr;</a>' +
+          '<a class="reg-alt" href="contact.html?domain=' + encodeURIComponent(name) + '">or have us do it for you</a>' +
+          '<p class="fine">You’ll see the live price and complete your purchase securely on our checkout.</p>', 'ok');
+      } else {
+        var price = TLD_PRICE[name.split('.').pop()];
+        render(
+          '<div class="dn">' + esc(name) + '</div>' +
+          '<div class="verdict ok">✅ Great news — this domain is available!</div>' +
+          (price ? '<p class="pr">Register it through VistoViz for <b>$' + price + '/year</b> — we set it up for you.</p>'
+                 : '<p class="pr">We can register this domain for you and handle the full setup.</p>') +
+          regCta(name, 'Register this domain') + fine, 'ok');
+      }
     };
 
     var showTaken = function (name) {
