@@ -121,6 +121,27 @@
     });
   }
 
+  // Domain search — honest: leads to an inquiry, never fakes availability
+  var domainForm = document.getElementById('domainSearch');
+  if (domainForm) {
+    var domainResult = document.getElementById('domainResult');
+    var domainInput = document.getElementById('domainInput');
+    domainForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var q = (domainInput.value || '').trim().toLowerCase()
+        .replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '').replace(/\s+/g, '');
+      if (!q) return;
+      var name = q.indexOf('.') > -1 ? q : q + '.com';
+      if (domainResult) {
+        domainResult.innerHTML =
+          '<div class="dn">' + name.replace(/[<>"]/g, '') + '</div>' +
+          '<p>Great choice! Request it and we’ll check availability and register it for you — no guesswork.</p>' +
+          '<a class="btn btn-primary" href="contact.html">Request this domain &rarr;</a>';
+        domainResult.classList.add('show');
+      }
+    });
+  }
+
   // Live chat widget
   var chatFab = document.getElementById('chatFab');
   var chatPanel = document.getElementById('chatPanel');
