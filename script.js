@@ -10,7 +10,7 @@
     onScroll();
   }
 
-  // Mobile hamburger
+  // Mobile hamburger + Services dropdown
   var hamburger = document.getElementById('hamburger');
   var navLinks = document.getElementById('navLinks');
   if (hamburger && navLinks) {
@@ -19,10 +19,27 @@
       hamburger.setAttribute('aria-expanded', open ? 'true' : 'false');
     });
     navLinks.querySelectorAll('a').forEach(function (a) {
-      a.addEventListener('click', function () {
+      a.addEventListener('click', function (e) {
+        // On mobile the "Services" parent expands its submenu instead of navigating
+        if (a.classList.contains('drop-toggle') && window.matchMedia('(max-width: 680px)').matches) {
+          e.preventDefault();
+          var li = a.closest('.has-dropdown');
+          if (li) li.classList.toggle('open');
+          return;
+        }
         navLinks.classList.remove('open');
         hamburger.setAttribute('aria-expanded', 'false');
       });
+    });
+
+    // Highlight the current page in the nav (and its dropdown parent)
+    var here = (location.pathname.split('/').pop() || '').toLowerCase() || 'index.html';
+    navLinks.querySelectorAll('a').forEach(function (a) {
+      if ((a.getAttribute('href') || '').toLowerCase() === here) {
+        a.classList.add('active');
+        var li = a.closest('.has-dropdown');
+        if (li) { var t = li.querySelector('.drop-toggle'); if (t) t.classList.add('active'); }
+      }
     });
   }
 
@@ -40,7 +57,7 @@
     revealEls.forEach(function (el) { el.classList.add('in'); });
   }
 
-  // Contact form → posts leads to the MongoDB-backed /api/lead endpoint
+  // Contact form → emails each lead to the owner via FormSubmit (no server needed)
   var form = document.getElementById('quoteForm');
   if (form) {
     var success = document.getElementById('formSuccess');
@@ -60,25 +77,35 @@
       var label = btn ? btn.textContent : '';
       if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
 
-      fetch('/api/lead', {
+      // Honeypot: silently drop obvious bot submissions
+      if (val('company_website')) {
+        showMsg("✅ Thanks — we'll be in touch within 24 hours!", true);
+        if (btn) btn.textContent = 'Sent ✓';
+        setTimeout(function () { form.reset(); if (btn) { btn.disabled = false; btn.textContent = label; } }, 1200);
+        return;
+      }
+
+      fetch('https://formsubmit.co/ajax/vistoviz369@gmail.com', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({
           name: val('name'),
           email: val('email'),
           phone: val('phone'),
           message: val('message'),
-          company_website: val('company_website')
+          _subject: 'New quote request from VistoViz.com',
+          _template: 'table',
+          _captcha: 'false'
         })
       })
         .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
         .then(function (res) {
-          if (res.ok && res.d && res.d.ok) {
+          if (res.ok && res.d && (res.d.success === true || res.d.success === 'true')) {
             showMsg("✅ Thanks — we'll be in touch within 24 hours!", true);
             if (btn) btn.textContent = 'Sent ✓';
             setTimeout(function () { form.reset(); if (btn) { btn.disabled = false; btn.textContent = label; } }, 1200);
           } else {
-            showMsg((res.d && res.d.error) || "⚠️ Something went wrong. Please email vistoviz369@gmail.com or call (281) 889-3940.", false);
+            showMsg((res.d && res.d.message) || "⚠️ Something went wrong. Please email vistoviz369@gmail.com or call (281) 889-3940.", false);
             if (btn) { btn.disabled = false; btn.textContent = label; }
           }
         })
