@@ -399,8 +399,24 @@ a.svc .n { color: var(--ink); }
 .tld-chips b { color: var(--gold); }
 .domain-result { display: none; max-width: 640px; margin: 20px auto 0; background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 20px 22px; box-shadow: var(--shadow-lg); text-align: left; }
 .domain-result.show { display: block; }
-.domain-result .dn { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 20px; color: var(--navy); }
+.domain-result .dn { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 20px; color: var(--navy); word-break: break-all; }
 .domain-result p { color: var(--muted); font-size: 14px; margin: 6px 0 14px; }
+.domain-result.ok { border-color: #b7ebc6; box-shadow: 0 20px 50px rgba(16,132,64,.14); }
+.domain-result.no { border-color: #ffd8c2; box-shadow: 0 20px 50px rgba(190,60,20,.12); }
+.domain-result .verdict { font-weight: 700; font-size: 15px; margin-top: 8px; }
+.domain-result .verdict.ok { color: #0f9d58; }
+.domain-result .verdict.no { color: #d9480f; }
+.domain-result .pr { margin: 8px 0 14px; }
+.domain-result .pr b { color: var(--navy); }
+.domain-result .fine { font-size: 12px; color: var(--muted); margin: 12px 0 0; }
+.domain-result .checking { display: flex; align-items: center; gap: 10px; color: var(--muted); font-weight: 600; font-size: 14px; margin-top: 10px; }
+.domain-result .spin { width: 16px; height: 16px; border: 2px solid #e5e9f0; border-top-color: var(--orange); border-radius: 50%; animation: dspin .7s linear infinite; }
+@keyframes dspin { to { transform: rotate(360deg); } }
+.domain-result .alt-tlds { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+.domain-result .alt { background: var(--light); border: 1px solid var(--border); color: var(--navy); border-radius: 999px; padding: 7px 15px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
+.domain-result .alt:hover { background: var(--orange); border-color: var(--orange); color: #fff; }
+.domain-result .btn-primary { margin-right: 10px; }
+.domain-result a.btn { margin-top: 2px; }
 /* TLD pricing table */
 .tld-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
 .tld { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 20px; text-align: center; box-shadow: var(--shadow); transition: transform .3s, box-shadow .3s; }

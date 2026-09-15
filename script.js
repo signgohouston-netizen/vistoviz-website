@@ -60,6 +60,16 @@
   // Contact form → emails each lead to the owner via FormSubmit (no server needed)
   var form = document.getElementById('quoteForm');
   if (form) {
+    // Prefill the message when arriving from a "Register this domain" link
+    try {
+      var dparam = new URLSearchParams(location.search).get('domain');
+      if (dparam) {
+        var mEl = form.querySelector('#message');
+        if (mEl && !mEl.value) {
+          mEl.value = "I'd like to register the domain " + dparam.replace(/[^a-z0-9.\-]/gi, '') + ". Please check availability and set it up for me.";
+        }
+      }
+    } catch (e) { /* no-op */ }
     var success = document.getElementById('formSuccess');
     var val = function (id) { var el = form.querySelector('#' + id); return el ? el.value : ''; };
     var showMsg = function (text, ok) {
@@ -148,25 +158,90 @@
     });
   }
 
-  // Domain search — honest: leads to an inquiry, never fakes availability
+  // Domain search — REAL live availability via DNS-over-HTTPS (honest, no faked results)
   var domainForm = document.getElementById('domainSearch');
   if (domainForm) {
     var domainResult = document.getElementById('domainResult');
     var domainInput = document.getElementById('domainInput');
+    var TLD_PRICE = { com: '19.99', net: '22.99', org: '19.99', co: '32.99', io: '54.99', us: '14.99', biz: '21.99', info: '24.99', online: '12.99', store: '9.99', shop: '12.99', tech: '9.99', dev: '17.99', ai: '99.99' };
+    var ALT_TLDS = ['com', 'net', 'org', 'co', 'io', 'online'];
+    var esc = function (s) { return String(s).replace(/[<>"'&]/g, function (c) { return { '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '&': '&amp;' }[c]; }); };
+
+    var cleanDomain = function (raw) {
+      var q = (raw || '').trim().toLowerCase()
+        .replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '').replace(/\s+/g, '');
+      if (!q) return null;
+      if (q.indexOf('.') === -1) q = q + '.com';
+      var parts = q.split('.').filter(Boolean);
+      if (parts.length > 2) parts = parts.slice(-2); // reduce to the registrable domain
+      var name = parts.join('.');
+      return /^[a-z0-9-]+\.[a-z0-9-]+$/.test(name) ? name : null;
+    };
+
+    var render = function (html, cls) {
+      if (!domainResult) return;
+      domainResult.className = 'domain-result show' + (cls ? ' ' + cls : '');
+      domainResult.innerHTML = html;
+    };
+    var regCta = function (name, label) {
+      return '<a class="btn btn-primary" href="contact.html?domain=' + encodeURIComponent(name) + '">' + label + ' &rarr;</a>';
+    };
+    var fine = '<p class="fine">Availability is checked live via DNS. Final confirmation and exact price are verified at registration.</p>';
+
+    var showAvailable = function (name) {
+      var price = TLD_PRICE[name.split('.').pop()];
+      render(
+        '<div class="dn">' + esc(name) + '</div>' +
+        '<div class="verdict ok">✅ Great news — this domain is available!</div>' +
+        (price ? '<p class="pr">Register it through VistoViz for <b>$' + price + '/year</b> — we set it up for you.</p>'
+               : '<p class="pr">We can register this domain for you and handle the full setup.</p>') +
+        regCta(name, 'Register this domain') + fine, 'ok');
+    };
+
+    var showTaken = function (name) {
+      var sld = name.split('.')[0];
+      var chips = ALT_TLDS.map(function (t) {
+        return '<button type="button" class="alt" data-d="' + esc(sld + '.' + t) + '">.' + t + '</button>';
+      }).join('');
+      render(
+        '<div class="dn">' + esc(name) + '</div>' +
+        '<div class="verdict no">😕 Sorry — this domain is already registered.</div>' +
+        '<p class="pr">Try another extension for <b>' + esc(sld) + '</b>:</p>' +
+        '<div class="alt-tlds">' + chips + '</div>' +
+        regCta(name, 'Ask us to help you choose') + fine, 'no');
+    };
+
+    var runCheck = function (name) {
+      render('<div class="dn">' + esc(name) + '</div><div class="checking"><span class="spin"></span> Checking availability…</div>', 'busy');
+      fetch('https://dns.google/resolve?name=' + encodeURIComponent(name) + '&type=NS')
+        .then(function (r) { return r.json(); })
+        .then(function (j) {
+          if (j.Status === 3) showAvailable(name);            // NXDOMAIN → available
+          else if (j.Status === 0) showTaken(name);           // resolves → registered
+          else render('<div class="dn">' + esc(name) + '</div><p>We couldn’t confirm this one automatically. Request it and we’ll check &amp; register it for you.</p>' + regCta(name, 'Request this domain'), '');
+        })
+        .catch(function () {
+          render('<div class="dn">' + esc(name) + '</div><p>We couldn’t reach the checker right now. Request it and we’ll confirm availability for you.</p>' + regCta(name, 'Request this domain'), '');
+        });
+    };
+
     domainForm.addEventListener('submit', function (e) {
       e.preventDefault();
-      var q = (domainInput.value || '').trim().toLowerCase()
-        .replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '').replace(/\s+/g, '');
-      if (!q) return;
-      var name = q.indexOf('.') > -1 ? q : q + '.com';
-      if (domainResult) {
-        domainResult.innerHTML =
-          '<div class="dn">' + name.replace(/[<>"]/g, '') + '</div>' +
-          '<p>Great choice! Request it and we’ll check availability and register it for you — no guesswork.</p>' +
-          '<a class="btn btn-primary" href="contact.html">Request this domain &rarr;</a>';
-        domainResult.classList.add('show');
-      }
+      var name = cleanDomain(domainInput.value);
+      if (!name) { render('<p>Please enter a valid domain, like <b>yourbusiness.com</b>.</p>', ''); return; }
+      runCheck(name);
     });
+
+    // Tapping an alternative extension re-runs the check
+    if (domainResult) {
+      domainResult.addEventListener('click', function (e) {
+        var b = e.target.closest('.alt');
+        if (!b) return;
+        var d = b.getAttribute('data-d');
+        if (domainInput) domainInput.value = d;
+        runCheck(d);
+      });
+    }
   }
 
   // Live chat widget
