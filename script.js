@@ -60,13 +60,17 @@
   // Contact form → emails each lead to the owner via FormSubmit (no server needed)
   var form = document.getElementById('quoteForm');
   if (form) {
-    // Prefill the message when arriving from a "Register this domain" link
+    // Prefill the message when arriving from a "Register this domain" or service link
     try {
-      var dparam = new URLSearchParams(location.search).get('domain');
-      if (dparam) {
-        var mEl = form.querySelector('#message');
-        if (mEl && !mEl.value) {
+      var params = new URLSearchParams(location.search);
+      var dparam = params.get('domain');
+      var sparam = params.get('service');
+      var mEl = form.querySelector('#message');
+      if (mEl && !mEl.value) {
+        if (dparam) {
           mEl.value = "I'd like to register the domain " + dparam.replace(/[^a-z0-9.\-]/gi, '') + ". Please check availability and set it up for me.";
+        } else if (sparam) {
+          mEl.value = "I'm interested in " + sparam.replace(/[^a-z0-9 .,&\-]/gi, '') + ". Please send me details and pricing.";
         }
       }
     } catch (e) { /* no-op */ }
