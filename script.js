@@ -99,7 +99,7 @@
         return;
       }
 
-      fetch('https://formsubmit.co/ajax/vistoviz369@gmail.com', {
+      fetch('https://formsubmit.co/ajax/d26a26467b7094faa216e3ea23f3d378', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({
